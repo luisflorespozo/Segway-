@@ -1,0 +1,1 @@
+From design to implementation, Embedded systems and mechanical design, a SEGWAY build and programmed in Matlab and Arduino UNO, with two accelerometer sensors.

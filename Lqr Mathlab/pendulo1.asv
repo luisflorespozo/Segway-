@@ -1,0 +1,183 @@
+
+
+
+clear all close all clc
+% Constantes 
+m = 54;       %0.05
+M = 20;        %1.05
+L = 0.35;
+g = 9.8182;
+
+
+
+a21 = (M+m)*g/(M*L);
+a41 = -m*g/M; 
+b21 = -1/(M*L); 
+b41 = 1/M;
+%Espacio Estado
+
+A = [0 1 0 0; a21 0 0 0; 0 0 0 1; a41 0 0 0]; 
+B = [0; b21; 0; b41];
+ 
+
+
+%Control  Optimal 
+q1 = 100;
+q2 = 0;
+
+q3 = 100;
+
+q4 = 0;
+
+
+
+Q = diag([q1 q2 q3 q4]); 
+R = [1];
+P = are(A,B*inv(R)*B',Q);
+
+
+
+K = inv(R)*B'*P;
+
+% SIMULACION
+
+ti = 0;
+
+tf = 3;
+
+dt = 0.001;
+
+k=1;
+
+
+
+
+    
+phi0 = input('Angulo Inicial (grados)  : ');
+
+
+
+x(1,1) = phi0*pi/180;
+
+x(2,1) = 0; x(3,1) = 0; x(4,1) = 0;
+
+
+for t=ti:dt:tf
+
+    phi = x(1,1); phip = x(2,1); 
+    F = -K*x;
+%Modelo del pendulo  No Lineal
+
+numx2p  = F - m*g*sin(phi)*cos(phi) + m*L*phip*phip*sin(phi);
+ 
+
+
+denx2p = (M + m*sin(phi)*sin(phi));
+
+x2p = numx2p/denx2p;
+
+phi2p = (g*sin(phi)-x2p*cos(phi))/L;
+
+%Actualizando valores 
+x(1,1) = x(1,1) + x(2,1)*dt; 
+x(2,1) = x(2,1) + phi2p*dt; 
+x(3,1) = x(3,1) + x(4,1)*dt; 
+x(4,1) = x(4,1) + x2p*dt;
+%Guardando Matrices 
+ANG(k,1)  = x(1,1)*180/pi; 
+ang(k,1)  = x(1,1);
+POS(k,1)  = x(3,1);
+Fuerza(k,1) = F; 
+T(k,1)  = t;
+k = k+1;
+
+end
+
+
+
+figure(1) 
+subplot(211) 
+plot(T,ANG) 
+title('ANGULO phi') 
+grid on
+subplot(212)
+plot(T,POS) 
+title('POSICION  X') 
+grid on
+
+
+figure(2)
+
+plot(T,Fuerza)
+
+title('FUERZA APLICADA')
+
+grid on
+
+% ANIMACION
+ 
+
+
+kf = k-1;
+
+a = 0.3;
+
+b = 0.05;
+
+plano = [-1 1 -0.1 0.5];
+
+
+
+figure(3)
+
+axis(plano)
+
+
+
+for k=1:10:kf
+
+A0X = POS(k,1); 
+A0Y = b;
+A1X = POS(k,1)+a/2; A1Y = b;
+A2X = POS(k,1)-a/2; A2Y = b;
+A3X = POS(k,1)-a/2; A3Y = 0;
+A4X = POS(k,1)+a/2;
+
+A4Y = 0; Xcarro = [A1X A2X A3X A4X A1X];
+
+Ycarro = [A1Y A2Y A3Y A4Y A1Y]; 
+ApX = POS(k,1)  + L*sin(ang(k,1)); 
+ApY = b + L*cos(ang(k,1));
+Xpend = [A0X ApX]; Ypend = [A0Y ApY]; As1x = -1;
+As1y = 0; 
+As2x = 1; As2y = 0;
+Xsuelo = [As1x As2x]; Ysuelo = [As1y As2y];
+%GRAFICA
+ 
+
+
+clf; 
+plot(Xsuelo,Ysuelo,'g','linewidth',2) 
+hold on 
+plot(Xpend,Ypend,'r','linewidth',4) 
+hold on
+plot(Xcarro,Ycarro,'b','linewidth',10) 
+hold on 
+plot(ApX,ApY,'*m','linewidth',20) 
+hold on 
+plot(A3X,A3Y,'*b','linewidth',13) 
+hold on 
+plot(A4X,A4Y,'*b','linewidth',13) 
+axis(plano)
+grid on
+pause(1/2000)
+
+
+end
+
+
+
+disp(' ')
+
+disp('...FIN.....')
+
